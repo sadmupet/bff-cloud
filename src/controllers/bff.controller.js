@@ -79,16 +79,26 @@ const hacerTransferencia = async (req, res) => {
 const buscarUsuario = async (req, res) => {
     const { rut, gmail } = req.query;
     const token = req.headers.authorization;
- 
+
     if (!rut && !gmail) {
         return res.status(400).json({ error: 'Debes mandar un rut o un gmail' });
     }
- 
+
     try {
         const usuario = await microservices.buscarUsuario({ rut, gmail }, token);
         return res.json(usuario);
     } catch (error) {
-        return res.status(404).json({ error: 'No se encontró ningún usuario con ese dato' });
+        console.error('Error real al buscar usuario:', {
+            status: error.response?.status,
+            data: error.response?.data,
+            message: error.message
+        });
+
+        const status = error.response?.status || 500;
+        if (status === 404) {
+            return res.status(404).json({ error: 'No se encontró ningún usuario con ese dato' });
+        }
+        return res.status(status).json({ error: 'Error al buscar el usuario. Revisa la consola del BFF.' });
     }
 };
  
@@ -104,4 +114,4 @@ const crearContacto = async (req, res) => {
     }
 };
 
-module.exports = { login, getDashboardData, hacerTransferencia, register };
+module.exports = { login, getDashboardData, hacerTransferencia, register, buscarUsuario, crearContacto };

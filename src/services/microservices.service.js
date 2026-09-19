@@ -91,10 +91,6 @@ const crearContacto = async (datosContacto, token) => {
 };
 
 module.exports = {
-    loginUsuario,
-    obtenerUsuario,
-    obtenerContactos,
-    obtenerTransferencias,
-    realizarTransferencia,
-    registrarUsuario
+    loginUsuario, obtenerUsuario, obtenerContactos, obtenerTransferencias,
+    realizarTransferencia, registrarUsuario, buscarUsuario, crearContacto
 };
