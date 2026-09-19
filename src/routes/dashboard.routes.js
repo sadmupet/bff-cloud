@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const dashboardController = require('../controllers/dashboard.controller');
+const bffController = require('../controllers/bff.controller');
 
-router.get('/:userId', dashboardController.getDashboardData);
+router.post('/login', bffController.login);
+router.get('/dashboard/:userId', bffController.getDashboardData);
+router.post('/transferencias', bffController.hacerTransferencia);
 
 module.exports = router;
