@@ -1,11 +1,15 @@
 const microservices = require('../services/microservices.service');
 
 const register = async (req, res) => {
-    // 1. Extraemos la contraseña para NO enviarla a MySQL (Cognito ya la guardó en la nube)
+    // 1. Extraemos la contraseña real que digitó el usuario para descartarla
     const { password, ...datosUsuario } = req.body;
     
-    // 2. Solo enviamos el resto de los datos a Spring Boot
-    const datos = { ...datosUsuario, permisos: "Usuario" };
+    // 2. Le inyectamos una contraseña falsa a Java para que MySQL no arroje error
+    const datos = { 
+        ...datosUsuario, 
+        password: "MANAGED_BY_COGNITO", 
+        permisos: "Usuario" 
+    };
     
     try {
         const data = await microservices.registrarUsuario(datos);
@@ -109,5 +113,4 @@ const crearContacto = async (req, res) => {
     }
 };
 
-// Quitamos el 'login' de las exportaciones porque ya no existe
 module.exports = { getDashboardData, hacerTransferencia, register, buscarUsuario, crearContacto };
