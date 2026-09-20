@@ -20,14 +20,36 @@ const register = async (req, res) => {
         const mensajeJava = error.response?.data?.message || '';
  
         let mensajeAmigable = 'Fallo al registrar. Revisa los datos.';
-        if (mensajeJava.includes('GMAIL')) {
+        if (mensajeJava.toLowerCase().includes('gmail')) {
             mensajeAmigable = 'Ese correo ya está registrado.';
-        } else if (mensajeJava.includes('RUT')) {
+        } else if (mensajeJava.toLowerCase().includes('rut')) {
             mensajeAmigable = 'Ese RUT ya está registrado.';
         }
  
         const status = error.response?.status || 400;
         return res.status(status).json({ error: mensajeAmigable });
+    }
+};
+
+// NUEVO: intercambia identidad (verificada ya por Cognito en el frontend)
+// por un token JWT interno emitido por back-sesion, firmado con la clave
+// local HS256 y con el RUT como subject. Este es el token que
+// back_contacto y back-trans-service saben validar.
+const loginLocal = async (req, res) => {
+    const { rut } = req.body;
+
+    if (!rut) {
+        return res.status(400).json({ error: 'Falta el RUT para crear la sesión interna' });
+    }
+
+    try {
+        // La contraseña "MANAGED_BY_COGNITO" es la misma que se inyectó
+        // al registrar; nunca la ve ni la escribe el usuario.
+        const data = await microservices.loginUsuario(rut, 'MANAGED_BY_COGNITO');
+        return res.json(data); // { token, idUsuario }
+    } catch (error) {
+        console.error('Error al crear sesión interna:', error.response?.data || error.message);
+        return res.status(401).json({ error: 'No se pudo crear la sesión interna' });
     }
 };
 
@@ -51,7 +73,7 @@ const getDashboardData = async (req, res) => {
          }
 
          const responseBFF = {
-             usuario: { id: usuario.id, nombre: usuario.nombre, rut: usuario.rut },
+             usuario: { id: usuario.idUsuario, nombre: usuario.nombre, rut: usuario.rut },
              metricas: { totalContactos: contactos.length, totalTransferencias: transferencias.length },
              detalles: { contactos, ultimasTransferencias: transferencias.slice(0, 5) }
          };
@@ -113,4 +135,4 @@ const crearContacto = async (req, res) => {
     }
 };
 
-module.exports = { getDashboardData, hacerTransferencia, register, buscarUsuario, crearContacto };
+module.exports = { getDashboardData, hacerTransferencia, register, buscarUsuario, crearContacto, loginLocal };
